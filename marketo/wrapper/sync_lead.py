@@ -26,7 +26,7 @@ def wrap(
         '<ForeignSysType>' + escape(foreign_system_type) + '</ForeignSysType>' \
         if foreign_system_id and foreign_system_type else ''
 
-    x = (
+    return(
         '<mkt:paramsSyncLead>' +
         marketo_cookie_element +
         '<leadRecord>' +
@@ -38,8 +38,6 @@ def wrap(
         '<returnLead>true</returnLead>' +
         '</mkt:paramsSyncLead>'
     )
-    print x
-    return x
 
 
 def unwrap(response):
