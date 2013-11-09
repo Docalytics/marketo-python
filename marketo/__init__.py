@@ -93,15 +93,61 @@ class Client:
         else:
             raise Exception(response.text)
 
-    def sync_lead(self, email=None, attributes=None):
+    def sync_lead(self,
+                  email=None,
+                  marketo_id=None,
+                  marketo_cookie=None,
+                  foreign_system_id=None,
+                  foreign_system_type=None,
+                  attributes=None):
+        """
+        Push information about a lead to Marketo. Lead must be identified by one or more of email, marketo_id,
+        marketo_cookie, or foriegn_system_id. See http://developers.marketo.com/documentation/soap/synclead/ for more
+        details.
 
-        if not email or not isinstance(email, (str, unicode)):
-            raise ValueError('Must supply lead id as a non empty string.')
+        :type email: str
+        :param email: the email address of the lead
+
+        :type marketo_id: str
+        :param marketo_id: the marketo generated id for a lead
+
+        :type marketo_cookie: str
+        :param marketo_cookie: a marketo cookie generated for a lead by Marketo's munchkin.js
+
+        :type foreign_system_id: str
+        :param foreign_system_id: a foriegn system identifier for a lead
+
+        :type foreign_system_type: str
+        :param foreign_system_type: the type of foreign system for foreign_system_id. Required if foreign_system_id
+        is passed. Possible values are 'CUSTOM', 'SFDC', 'NETSUITE'
+
+        :type attributes: tuple
+        :param attributes: the information about the lead to be pushed to marketo
+
+        :returns: a lead object for the lead that was sync'ed
+        """
+        if (not email or not isinstance(email, (str, unicode))) \
+                and (not marketo_id or not isinstance(marketo_id, (str, unicode))) \
+                and (not marketo_cookie or not isinstance(marketo_cookie, (str, unicode))) \
+                and (not foreign_system_id or not isinstance(foreign_system_id, (str, unicode))):
+            raise ValueError('Must supply lead identification in email, marketo_id, '
+                             'marketo_cookie, or foreign_system_id as a non empty string.')
+
+        if foreign_system_id and not foreign_system_type:
+            raise ValueError('foreign_system_type must be specified with foreign_system_id')
+
+        if foreign_system_id and foreign_system_type and foreign_system_type not in ['CUSTOM', 'SFDC', 'NETSUITE']:
+            raise ValueError('foreign_system_type must be \'CUSTOM\', \'SFDC\', or \'NETSUITE\'')
 
         if not attributes or not isinstance(attributes, tuple):
             raise ValueError('Must supply attributes as a non empty tuple.')
 
-        body = sync_lead.wrap(email, attributes)
+        body = sync_lead.wrap(
+            email=email,
+            marketo_id=marketo_id,
+            marketo_cookie=marketo_cookie,
+            foreign_system_id=foreign_system_id,
+            attributes=attributes)
 
         response = self.request(body)
         if response.status_code == 200:
