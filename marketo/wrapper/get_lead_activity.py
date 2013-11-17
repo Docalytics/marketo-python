@@ -1,6 +1,6 @@
 
 import xml.etree.ElementTree as ET
-import lead_activity
+from marketo.wrapper import lead_activity
 
 
 def wrap(email=None):

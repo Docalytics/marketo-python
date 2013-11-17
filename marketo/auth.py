@@ -1,7 +1,8 @@
-from rfc3339 import rfc3339
 import hmac
 import hashlib
 import datetime
+
+from marketo import rfc3339
 
 
 def sign(message, encryption_key):
@@ -10,7 +11,7 @@ def sign(message, encryption_key):
 
 
 def header(user_id, encryption_key):
-    timestamp = rfc3339(datetime.datetime.now())
+    timestamp = rfc3339.rfc3339(datetime.datetime.now())
     signature = sign(timestamp + user_id, encryption_key)
     return (
         '<env:Header><ns1:AuthenticationHeader>' +

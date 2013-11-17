@@ -10,13 +10,6 @@ def wrap(
         foreign_system_id=None,
         foreign_system_type=None,
         attributes=None):
-    attr = ''
-    for i in attributes:
-        attr += '<attribute>' \
-            '<attrName>' + escape(i[0]) + '</attrName>' \
-            '<attrType>' + escape(i[1]) + '</attrType>' \
-            '<attrValue>' + escape(i[2]) + '</attrValue>' \
-            '</attribute>'
 
     email_element = '<Email>' + escape(email) + '</Email>' if email else ''
     marketo_id_element = '<Id>' + escape(marketo_id) + '</Id>' if marketo_id else ''
@@ -33,12 +26,56 @@ def wrap(
         email_element +
         marketo_id_element +
         foreign_system_id_element +
-        '<leadAttributeList>' + attr + '</leadAttributeList>' +
+        '<leadAttributeList>' +
+        (attributes_for_tuple(attributes) if isinstance(attributes, tuple) else attributes_for_dict(attributes)) +
+        '</leadAttributeList>' +
         '</leadRecord>' +
         '<returnLead>true</returnLead>' +
         '</mkt:paramsSyncLead>'
     )
 
+
+def attributes_for_dict(attributes):
+    attr = ''
+    for key in attributes:
+        attr += '<attribute>' \
+            '<attrName>' + escape(key) + '</attrName>' \
+            '<attrValue>' + escape(attributes[key]) + '</attrValue>' \
+            '</attribute>'
+
+    return attr
+
+
+def attributes_for_tuple(attributes):
+    attr = ''
+    for i in attributes:
+        attrName = None
+        attrType = None
+        attrValue = None
+
+        if len(i) == 2:
+            attrName = i[0]
+            attrValue = i[1]
+        elif len(i) == 3:
+            attrName = i[0]
+            attrType = i[1]
+            attrValue = i[2]
+        else:
+            raise ValueError("Invalid attribute tuple. Attribute tuples must be of the form name, value or name, type, value.")
+
+        if attrType:
+            attr += '<attribute>' \
+                '<attrName>' + escape(attrName) + '</attrName>' \
+                '<attrType>' + escape(attrType) + '</attrType>' \
+                '<attrValue>' + escape(attrValue) + '</attrValue>' \
+                '</attribute>'
+        else:
+            attr += '<attribute>' \
+                '<attrName>' + escape(attrName) + '</attrName>' \
+                '<attrValue>' + escape(attrValue) + '</attrValue>' \
+                '</attribute>'
+
+    return attr
 
 def unwrap(response):
     root = ET.fromstring(response.text)

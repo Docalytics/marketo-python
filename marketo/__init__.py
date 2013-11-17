@@ -1,11 +1,9 @@
-
-import version
+from marketo import version, auth
 
 VERSION = version.VERSION
 __version__ = VERSION
 
 import requests
-import auth
 
 from marketo.wrapper import get_lead, get_lead_activity, request_campaign, sync_lead
 
@@ -14,7 +12,7 @@ class Client:
 
     def __init__(self, soap_endpoint=None, user_id=None, encryption_key=None):
 
-        if not soap_endpoint or not isinstance(soap_endpoint, str):
+        if not soap_endpoint or not isinstance(soap_endpoint, (str, unicode)):
             raise ValueError('Must supply a soap_endpoint as a non empty string.')
 
         if not user_id or not isinstance(user_id, (str, unicode)):
@@ -121,8 +119,9 @@ class Client:
         :param foreign_system_type: the type of foreign system for foreign_system_id. Required if foreign_system_id
         is passed. Possible values are 'CUSTOM', 'SFDC', 'NETSUITE'
 
-        :type attributes: tuple
-        :param attributes: the information about the lead to be pushed to marketo
+        :type attributes: tuple, dict
+        :param attributes: the information about the lead to be pushed to marketo either in the form of tuples or a
+        dictionary
 
         :returns: a lead object for the lead that was sync'ed
         """
@@ -139,8 +138,8 @@ class Client:
         if foreign_system_id and foreign_system_type and foreign_system_type not in ['CUSTOM', 'SFDC', 'NETSUITE']:
             raise ValueError('foreign_system_type must be \'CUSTOM\', \'SFDC\', or \'NETSUITE\'')
 
-        if not attributes or not isinstance(attributes, tuple):
-            raise ValueError('Must supply attributes as a non empty tuple.')
+        if not attributes or (not isinstance(attributes, tuple) and not isinstance(attributes, dict)):
+            raise ValueError('Must supply attributes as a non empty tuple or dict.')
 
         body = sync_lead.wrap(
             email=email,
