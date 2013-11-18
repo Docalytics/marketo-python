@@ -75,15 +75,60 @@ class Client:
         else:
             raise Exception(response.text)
 
-    def request_campaign(self, campaign=None, lead=None):
+    def request_campaign(self, campaignId, leadId=None, leadIdType='IDNUM', leads=None):
+        """
+        Adds a lead or leads to a campaign.
 
-        if not campaign or not isinstance(campaign, (str, unicode)):
+        :type campaignId: str
+        :param campaignId: the id of the campaign to which the leads will be added
+
+        :type leadId: str
+        :param leadId: the id of a lead to be added to the campaign. Used for adding a single lead to a campaign. May
+        not be used if leads is specified.
+
+        :type leadIdType: the type of the id being passed. Defaults to 'IDNUM'. Possible values are: 'IDNUM'
+        (Marketo lead id), 'COOKIE' (Munkin cookie for a lead), 'EMAIL' (email address for a lead), 'SFDCLEADID'
+        (Salesforce id for a lead), 'LEADOWNEREMAIL' (the email address of the owner of the lead), 'SFDCACCOUNTID'
+        (account id from Salesforce), 'SFDCCONTACTID' (the contact id from Salesforce), 'SFDCLEADID' (the lead id from
+        Salesforce), 'SFDCLEADOWNERID' (the lead owner id from Salesforce), 'SFDCOPPTYID' (the opportunity id from
+        Salesforce)
+
+        :type leads: list of tuples or tuple of tuples
+        :param leads: multiple leads to be added to the campaign. May not be used with the leadId parameter. For
+        each individual tuple, the first value is the id of the lead, the second value is the type of the lead id. See
+        leadIdType for a list of possible values.
+
+        :returns: True on success, exception on failure
+        """
+        if not campaignId or not isinstance(campaignId, (str, unicode)):
             raise ValueError('Must supply campaign id as a non empty string.')
 
-        if not lead or not isinstance(lead, (str, unicode)):
-            raise ValueError('Must supply lead id as a non empty string.')
+        if leadId and leads:
+            raise ValueError('Cannot specify both leadId and leads')
 
-        body = request_campaign.wrap(campaign, lead)
+        if leadId:
+            # Single lead
+            if not leadIdType:
+                raise ValueError('leadIdType must be specified')
+
+            # Convert into list
+            leads = [(leadId, leadIdType)]
+
+        for lead in leads:
+            # Check lead id
+            if not lead[0] or not isinstance(lead[0], (str, unicode)):
+                raise ValueError('non-empty string required for lead id')
+
+            # CHeck lead id type
+            if not lead[1] or not isinstance(lead[1], (str, unicode)) or lead[1] not in ['IDNUM', 'COOKIE', 'EMAIL',
+                                                                                         'SFDCLEADID', 'LEADOWNEREMAIL',
+                                                                                         'SFDCACCOUNTID',
+                                                                                         'SFDCCONTACTID', 'SFDCLEADID',
+                                                                                         'SFDCLEADOWNERID',
+                                                                                         'SFDCOPPTYID']:
+                raise ValueError("'%s' is an invalid lead id type' % lead[1]")
+
+        body = request_campaign.wrap(campaignId, leads)
 
         response = self.request(body)
         if response.status_code == 200:
