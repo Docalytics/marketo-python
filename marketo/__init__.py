@@ -5,7 +5,7 @@ __version__ = VERSION
 
 import requests
 
-from marketo.wrapper import get_lead, get_lead_activity, request_campaign, sync_lead
+from marketo.wrapper import get_lead, get_lead_activity, request_campaign, get_campaigns_for_source, sync_lead
 
 
 class Client:
@@ -88,6 +88,35 @@ class Client:
         response = self.request(body)
         if response.status_code == 200:
             return True
+        else:
+            raise Exception(response.text)
+
+    def get_campaigns_for_source(self, source='MKTOWS', name=None, exactName=False):
+        """
+        Create request body for getCampaignsForSource.
+
+        :type source: str
+        :param source: the source requested. Possible values 'MKTOWS' or 'SALES'
+
+        :type name: str
+        :param name: the name filter to apply to the request. Optional.
+
+        :type exactName: bool
+        :param exactName: boolean flag indicating if the returned campaigns must be an exact match to name
+        """
+
+
+        if not source or not isinstance(source, (str, unicode)):
+            raise ValueError('Must supply source as a non empty string.')
+
+        if name and not isinstance(name, (str, unicode)):
+            raise ValueError('Must supply lead id as a non empty string.')
+
+        body = get_campaigns_for_source.wrap(source, name, exactName)
+
+        response = self.request(body)
+        if response.status_code == 200:
+            return get_campaigns_for_source.unwrap(response)
         else:
             raise Exception(response.text)
 
